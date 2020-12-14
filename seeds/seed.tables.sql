@@ -19,7 +19,8 @@ INSERT INTO "language" ("id", "name", "user_id")
 VALUES
   (1, 'Norwegian', 1);
 
-INSERT INTO "word" ("id", "language_id", "original", "translation", "next"
+INSERT INTO "word" ("id", "language_id", "original", "translation", "next")
+VALUES
   (1, 1, 'blomster', 'flowers', 2),
   (2, 1, 'skog', 'forest', 3),
   (3, 1, 'solskinn', 'sunshine', 4),
