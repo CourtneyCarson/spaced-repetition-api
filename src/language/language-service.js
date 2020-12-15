@@ -28,6 +28,17 @@ const LanguageService = {
       )
       .where({ language_id })
   },
+
+// write endpoints for getting next word(original) 
+  //correct count for that word
+  //total score for user
+
+// expected from front end 
+// "nextWord": "Testnextword",
+// "wordCorrectCount": 222,
+// "wordIncorrectCount": 333,
+// "totalScore": 999
+
 }
 
 module.exports = LanguageService
