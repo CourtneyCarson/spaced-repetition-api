@@ -41,7 +41,7 @@ const LanguageService = {
         'language_id', 
         'correct_count', 
         'incorrect_count',
-        'original'
+        'original', 
     )
     .where({language_id})
   }

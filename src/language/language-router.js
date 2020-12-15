@@ -48,6 +48,7 @@ languageRouter
   .get('/head', async (req, res, next) => {
     // using get'/' as example for setup
     try {
+      // only works in brackets
       const [nextWord] = await LanguageService.getNextWord(
         req.app.get('db'),
         req.language.id,
@@ -59,7 +60,12 @@ languageRouter
       // "totalScore": 999
 
       res.json({
+        // access nextWord from above & the column headers from migrations file
         nextWord: nextWord.original,
+        wordCorrectCount: nextWord.correct_count,
+        wordIncorrectCount: nextWord.incorrect_count,
+        //have to access through req since nextWord is accessing only the words table
+        totalScore: req.language.total_score
       });
       next();
     }
