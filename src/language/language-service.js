@@ -30,10 +30,32 @@ const LanguageService = {
   },
 
 // write endpoints for getting next word(original) 
-  //correct count for that word
+  // id, language_id (from language table)
+    //correct count for that word
   //total score for user
+  getNextWord(db, language_id) {
+    return db 
+      .from('word')
+      .select(
+        'id', 
+        'language_id', 
+        'correct_count', 
+        'incorrect_count',
+        'original'
+    )
+    .where({language_id})
+  }
 
-// expected from front end 
+// Linked List??????
+  // linkedList(words, head) {
+
+  // }
+  
+  
+  
+  
+  
+// expected from front end: 
 // "nextWord": "Testnextword",
 // "wordCorrectCount": 222,
 // "wordIncorrectCount": 333,

@@ -1,8 +1,8 @@
-const express = require('express')
-const LanguageService = require('./language-service')
-const { requireAuth } = require('../middleware/jwt-auth')
+const express = require('express');
+const LanguageService = require('./language-service');
+const { requireAuth } = require('../middleware/jwt-auth');
 
-const languageRouter = express.Router()
+const languageRouter = express.Router();
 
 languageRouter
   .use(requireAuth)
@@ -11,19 +11,19 @@ languageRouter
       const language = await LanguageService.getUsersLanguage(
         req.app.get('db'),
         req.user.id,
-      )
+      );
 
       if (!language)
         return res.status(404).json({
           error: `You don't have any languages`,
-        })
+        });
 
-      req.language = language
-      next()
+      req.language = language;
+      next();
     } catch (error) {
-      next(error)
+      next(error);
     }
-  })
+  });
 
 languageRouter
   .get('/', async (req, res, next) => {
@@ -31,28 +31,47 @@ languageRouter
       const words = await LanguageService.getLanguageWords(
         req.app.get('db'),
         req.language.id,
-      )
+      );
 
       res.json({
         language: req.language,
         words,
-      })
-      next()
+      });
+      next();
     } catch (error) {
-      next(error)
+      next(error);
     }
-  })
+  });
 
+// get next word I think... 
 languageRouter
   .get('/head', async (req, res, next) => {
-    // implement me
-    res.send('implement me!')
-  })
+    // using get'/' as example for setup
+    try {
+      const [nextWord] = await LanguageService.getNextWord(
+        req.app.get('db'),
+        req.language.id,
+      );
+      // expected from front end: 
+      // "nextWord": "Testnextword",
+      // "wordCorrectCount": 222,
+      // "wordIncorrectCount": 333,
+      // "totalScore": 999
+
+      res.json({
+        nextWord: nextWord.original,
+      });
+      next();
+    }
+    catch (error) {
+      next(error);
+    }
+  });
 
 languageRouter
   .post('/guess', async (req, res, next) => {
     // implement me
-    res.send('implement me!')
-  })
+    res.send('implement me!');
+  });
 
-module.exports = languageRouter
+module.exports = languageRouter;
