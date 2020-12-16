@@ -1,4 +1,4 @@
-const { LinkedList, _Node } = require('../linked-list')
+const { LinkedList, _Node } = require('../linked-list');
 
 const LanguageService = {
   getUsersLanguage(db, user_id) {
@@ -53,35 +53,40 @@ const LanguageService = {
   checkGuess(db, language_id) {
     return db
       .from('word')
-      .select(
-        'id',
-        'language_id',
-        'original',
-        'translation',
-        'next',
-        'memory_value',
-        'correct_count',
-        'incorrect_count',
-      )
+      .select('*')
       .where({ language_id });
-  }
+  },
+  // do I need one for the start of the list? language is only table with head column -- 
+  getLanguageDbHead(db, language_id) {
+    return db
+      .from('language')
+      .select('head')
+      .where({ language_id });
+  },
+
+
+  // Linked List?????? populate one here then make it do stuff in the router? 
+  // linkedList(words, head) {}
+  // Using the array of words taken from the database, we find each consecutive word
+  // in the list based on either the head value(for the start of the list) or the next value of each word,
+  // inserting each word to the end of the list
+createLinkedList(words, head) {
+  const list = new LinkedList()
+  
+  this.getLanguageDbHead(db, language_id)
+    .then(head => {
+      list.insertAfter(head);
+      console.log(list.head.value)
+    })
+  return list
+}
 
 
 
-  // Linked List??????
-  // linkedList(words, head) {
-
-  // }
 
 
 
 
-
-  // expected from front end: 
-  // "nextWord": "Testnextword",
-  // "wordCorrectCount": 222,
-  // "wordIncorrectCount": 333,
-  // "totalScore": 999
 
 };
 
