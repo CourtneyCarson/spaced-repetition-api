@@ -2,8 +2,9 @@ const express = require('express');
 const LanguageService = require('./language-service');
 const { requireAuth } = require('../middleware/jwt-auth');
 const { checkGuess } = require('./language-service');
-
+const jsonParser = express.json();
 const languageRouter = express.Router();
+const { LinkedList, toArray, _Node } = require('../linked-list');
 
 languageRouter
   .use(requireAuth)
@@ -75,56 +76,132 @@ languageRouter
     }
   });
 
+
+
+
 languageRouter
-  .post('/guess', async (req, res, next) => {
+  .post('/guess', jsonParser, async (req, res, next) => {
     // get words from database
-    // go to start of word list
-    // create list of words
-    // check guess - memory value
-    // if guess is correct save to db?? 
+    //     // go to start of word list
+    //     // create list of words
+    //     // check guess - memory value
+    //     // if guess is correct save to db?? 
     const guess = req.body.guess;
-    console.log(guess)
-    // 400 status for test file
     if (!guess) {
-      res.send(400)
-        .json({ error: `Missing 'guess' in request body` });
+      res.status(400).json({
+        error: `Missing 'guess' in request body`,
+      });
     }
-//get words
     try {
+      // fetch user's words from database
       const words = await LanguageService.getLanguageWords(
         req.app.get('db'),
         req.language.id,
       );
-//get head
-      const [{ head }] = await LanguageService.getLanguageDbHead(
+      // find start of user's word list
+      const [{ head }] = await LanguageService.getLanguageHead(
         req.app.get('db'),
         req.language.id,
       );
-   
-// get linked list
-    const list = await LanguageService.createLinkedList(
-      req.app.get('db'),
-      req.language.id
-    );
+      // create linked list of user's words
+      const list = LanguageService.createLinkedList(words, head);
+      const [checkNextWord] = await LanguageService.checkGuess(
+        req.app.get('db'),
+        req.language.id
+      );
 
-// check the guess? 
-   
-      const [checkGuess] = await LanguageService.checkGuess(
-        req.app.get('db'),
-        req.language.id,
-      );
-   
-//if statement?? see if guess is right?
-    if (checkGuess.translation === guess) {
-      res.send('yep')
-    } else {
-      res.send('nope')
-    }
-    next()
+      ///if statement?? see if guess is right?
+      if (checkNextWord.translation === guess) {
+        // If user's guess is correct, we update the memory value of the current word, the move the word an appropriate number of
+        //spaces back in the list, updating all affected nodes
+        const newMemVal = list.head.value.memory_value * 2;
+        list.head.value.memory_value = newMemVal;
+        list.head.value.correct_count++;
+
+        let curr = list.head;
+        let countDown = newMemVal;
+        while (countDown > 0 && curr.next !== null) {
+          curr = curr.next;
+          countDown--;
+        }
+
+        const temp = new _Node(list.head.value);
+
+        // if current.next null - set temp val to null 
+        if (curr.next === null) {
+          temp.next = curr.next;
+          curr.next = temp;
+          list.head = list.head.next;
+          curr.value.next = temp.value.id;
+          temp.value.next = null;
+        }
+        // else if current has a next - set next val to temp val id
+        else {
+          temp.next = curr.next;
+          curr.next = temp;
+          list.head = list.head.next;
+          curr.value.next = temp.value.id;
+          temp.value.next = temp.next.value.id;
+        }
+        //increment total score 
+        req.language.total_score++;
+        await LanguageService.updateWordsTable(
+          req.app.get('db'),
+          toArray(list),
+          req.language.id,
+          req.language.total_score
+        );
+        res.json({
+          nextWord: list.head.value.original,
+          totalScore: req.language.total_score,
+          wordCorrectCount: list.head.value.correct_count,
+          wordIncorrectCount: list.head.value.incorrect_count,
+          answer: temp.value.translation,
+          isCorrect: true
+        });
+                
+      } else {
+        // If user's guess is incorrect, we reset the memory value of the current word to 1 and move the word back 1 space, 
+        //updating all affected nodes
+        list.head.value.memory_value = 1;
+        list.head.value.incorrect_count++;
+
+        let curr = list.head;
+        let countDown = 1;
+        while (countDown > 0) {
+          curr = curr.next;
+          countDown--;
+        }
+
+        const temp = new _Node(list.head.value);
+        temp.next = curr.next;
+        curr.next = temp;
+        list.head = list.head.next;
+        curr.value.next = temp.value.id;
+        temp.value.next = temp.next.value.id;
+
+        await LanguageService.updateWordsTable(
+          // once our list is correct, we persist those changes to the databse
+          req.app.get('db'),
+          toArray(list),
+          req.language.id,
+          req.language.total_score
+        );
+        //same as above but set to false
+        res.json({
+          nextWord: list.head.value.original,
+          totalScore: req.language.total_score,
+          wordCorrectCount: list.head.value.correct_count,
+          wordIncorrectCount: list.head.value.incorrect_count,
+          answer: temp.value.translation,
+          isCorrect: false
+        });
+      }
+      next();
     }
     catch (error) {
-      next(error)
-    } 
+      next(error);
+    }
   });
-  
+
 module.exports = languageRouter;
