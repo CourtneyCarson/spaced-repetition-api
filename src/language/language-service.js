@@ -1,3 +1,5 @@
+const { LinkedList, _Node } = require('../linked-list')
+
 const LanguageService = {
   getUsersLanguage(db, user_id) {
     return db
@@ -10,7 +12,7 @@ const LanguageService = {
         'language.total_score',
       )
       .where('language.user_id', user_id)
-      .first()
+      .first();
   },
 
   getLanguageWords(db, language_id) {
@@ -26,41 +28,61 @@ const LanguageService = {
         'correct_count',
         'incorrect_count',
       )
-      .where({ language_id })
+      .where({ language_id });
   },
 
-// write endpoints for getting next word(original) 
+  // write services for getting next word(original) 
   // id, language_id (from language table)
-    //correct count for that word
+  //correct count for that word
   //total score for user
   getNextWord(db, language_id) {
-    return db 
+    return db
       .from('word')
       .select(
-        'id', 
-        'language_id', 
-        'correct_count', 
+        'language_id',
+        'original',
+        'translation',
+        'correct_count',
         'incorrect_count',
-        'original', 
-    )
-    .where({language_id})
+      )
+      .where({ language_id });
+  },
+
+  ///write services for guess   
+  //Check if the submitted answer is correct by comparing it with the translation in the database.
+  checkGuess(db, language_id) {
+    return db
+      .from('word')
+      .select(
+        'id',
+        'language_id',
+        'original',
+        'translation',
+        'next',
+        'memory_value',
+        'correct_count',
+        'incorrect_count',
+      )
+      .where({ language_id });
   }
 
-// Linked List??????
+
+
+  // Linked List??????
   // linkedList(words, head) {
 
   // }
-  
-  
-  
-  
-  
-// expected from front end: 
-// "nextWord": "Testnextword",
-// "wordCorrectCount": 222,
-// "wordIncorrectCount": 333,
-// "totalScore": 999
 
-}
 
-module.exports = LanguageService
+
+
+
+  // expected from front end: 
+  // "nextWord": "Testnextword",
+  // "wordCorrectCount": 222,
+  // "wordIncorrectCount": 333,
+  // "totalScore": 999
+
+};
+
+module.exports = LanguageService;
